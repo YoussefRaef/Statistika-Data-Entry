@@ -67,6 +67,15 @@ function findOrCreateRows(ws, header, targetDate, nNeeded) {
   // own date (not copied from elsewhere in the sheet), so it's always
   // correct and consistently formatted even if this sheet had zero
   // pre-dated rows for this day to begin with.
+  //
+  // If this date had NO existing rows anywhere on the sheet (lastDateRow
+  // never moved off its header-row default of 1), anchor to the END of
+  // the sheet instead - otherwise new rows get inserted right after the
+  // header, which both reverses day order in a multi-day batch and
+  // clones the header's own (yellow) styling into the new rows.
+  if (lastDateRow === 1) {
+    lastDateRow = ws.rowCount;
+  }
   const dateValue = dateStringToDateObj(targetDate);
   let insertAfter = lastDateRow;
   let extended = false;
