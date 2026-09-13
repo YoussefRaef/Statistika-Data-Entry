@@ -75,7 +75,7 @@ export default function App() {
 
   return (
     <div className="container">
-      <h1>Route email → Statistika</h1>
+      <h1>Route email → Statistika(NEW)</h1>
       <p className="subtitle">
         Upload the Statistika file once, then add one entry per day (that day's route file +
         that day's email). Process them all in one go and download a single updated file.
