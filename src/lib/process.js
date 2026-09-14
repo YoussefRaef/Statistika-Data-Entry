@@ -47,49 +47,38 @@ function findOrCreateRows(ws, header, targetDate, nNeeded) {
   const lastCol = ws.columnCount;
 
   const rows = [];
-  let lastDateRow = 1;
+  let lastRowSeen = 1;
+  const dateValue = dateStringToDateObj(targetDate);
 
+  // A row is available if SPZ is blank AND its DATUM either already
+  // matches this date, or is blank (some templates pre-fill REGION/
+  // POBOČKA for the whole month but leave DATUM blank until a day's
+  // data actually claims that row - in that case we stamp our own date
+  // into it and keep its existing REGION/POBOČKA).
   for (let r = 2; r <= ws.rowCount; r++) {
+    lastRowSeen = r;
+    const spzVal = ws.getRow(r).getCell(colSpz).value;
+    if (spzVal) continue;
+
     const dCell = ws.getRow(r).getCell(colDate).value;
     const dStr = parseAnyDate(dCell);
-    if (dStr === targetDate) {
-      lastDateRow = r;
-      const spzVal = ws.getRow(r).getCell(colSpz).value;
-      if (!spzVal) {
-        rows.push(r);
-        if (rows.length === nNeeded) return { rows, lastCol, extended: false };
+    if (dStr === targetDate || !dStr) {
+      if (!dStr) {
+        ws.getRow(r).getCell(colDate).value = dateValue;
       }
+      rows.push(r);
+      if (rows.length === nNeeded) return { rows, lastCol, extended: false };
     }
   }
 
-  // not enough pre-dated blank rows - extend past the day's block. The
-  // DATUM stamped in always comes straight from the daily route file's
-  // own date (not copied from elsewhere in the sheet), so it's always
-  // correct and consistently formatted even if this sheet had zero
-  // pre-dated rows for this day to begin with.
-  //
-  // If this date had NO existing rows anywhere on the sheet (lastDateRow
-  // never moved off its header-row default of 1), anchor to the END of
-  // the sheet instead - otherwise new rows get inserted right after the
-  // header, which both reverses day order in a multi-day batch and
-  // clones the header's own (yellow) styling into the new rows.
-  if (lastDateRow === 1) {
-    lastDateRow = ws.rowCount;
-  }
-  const dateValue = dateStringToDateObj(targetDate);
-  let insertAfter = lastDateRow;
+  // Ran out of usable rows entirely (no pre-dated AND no blank rows left)
+  // - extend past the very end of the sheet, cloning the last row's
+  // style/values (REGION/POBOČKA etc.) and stamping in the correct date.
+  let insertAfter = lastRowSeen;
   let extended = false;
   while (rows.length < nNeeded) {
     insertAfter += 1;
     extended = true;
-    if (insertAfter <= ws.rowCount) {
-      const spzVal = ws.getRow(insertAfter).getCell(colSpz).value;
-      const dStr = parseAnyDate(ws.getRow(insertAfter).getCell(colDate).value);
-      if (spzVal || (dStr && dStr !== targetDate)) {
-        // that row is already spoken for (different date/driver) - make room
-        ws.spliceRows(insertAfter, 0, []);
-      }
-    }
     copyRow(ws, insertAfter - 1, insertAfter, lastCol);
     ws.getRow(insertAfter).getCell(colDate).value = dateValue;
     rows.push(insertAfter);
