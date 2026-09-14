@@ -5,8 +5,8 @@
 // Recognizes plates like "7Z4 7615", "7Z47615", "8Z1 2266"
 const SPZ_RE = /^\d[A-Za-z]\d\s?\d{3,4}$/;
 
-// "expres 18-21" or "express 18-21" (Czech spelling has one 's')
-const EXPRESS_RE = /expres{1,2}\s+(\d{1,2}\s*-\s*\d{1,2})/i;
+// "expres 18-21" / "express 18-21" / "Ex 18-21" (all mean the same thing)
+const EXPRESS_RE = /\b(?:expres{1,2}|ex)\.?\s+(\d{1,2}\s*-\s*\d{1,2})/i;
 // "(7x inst.)"
 const INST_RE = /\((\d+)\s*x\s*inst\.?\)/i;
 // "sada 3764" (older emails said "set 3764") - informational only, not used
