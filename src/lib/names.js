@@ -6,7 +6,7 @@ export function stripDiacritics(s) {
 }
 
 export function norm(s) {
-  return stripDiacritics(String(s)).toUpperCase().trim();
+  return stripDiacritics(String(s)).toUpperCase().trim().replace(/\s+/g, " ");
 }
 
 // Simple Levenshtein distance, used for fuzzy name matching (stand-in for
